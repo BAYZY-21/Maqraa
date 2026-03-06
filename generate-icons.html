@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Icon Generator</title></head>
+<body>
+<canvas id="c192" width="192" height="192" style="display:none"></canvas>
+<canvas id="c512" width="512" height="512" style="display:none"></canvas>
+<script>
+function drawIcon(canvas) {
+  const s = canvas.width;
+  const ctx = canvas.getContext('2d');
+  const r = s * 0.18;
+
+  // Background
+  ctx.beginPath();
+  ctx.roundRect(0, 0, s, s, r);
+  const bg = ctx.createLinearGradient(0,0,s,s);
+  bg.addColorStop(0, '#061E14');
+  bg.addColorStop(1, '#1A5C45');
+  ctx.fillStyle = bg;
+  ctx.fill();
+
+  // Gold border
+  ctx.beginPath();
+  ctx.roundRect(s*0.03, s*0.03, s*0.94, s*0.94, r*0.9);
+  ctx.strokeStyle = '#C9A84C';
+  ctx.lineWidth = s * 0.015;
+  ctx.stroke();
+
+  // Gold circle
+  const cx = s/2, cy = s*0.44;
+  const cr = s*0.30;
+  const goldGrad = ctx.createRadialGradient(cx-cr*0.3,cy-cr*0.3,0,cx,cy,cr);
+  goldGrad.addColorStop(0, '#E8C96A');
+  goldGrad.addColorStop(1, '#9A7A2E');
+  ctx.beginPath();
+  ctx.arc(cx, cy, cr, 0, Math.PI*2);
+  ctx.fillStyle = goldGrad;
+  ctx.fill();
+
+  // Inner circle
+  ctx.beginPath();
+  ctx.arc(cx, cy, cr*0.75, 0, Math.PI*2);
+  ctx.fillStyle = '#0D3B2E';
+  ctx.fill();
+
+  // Book pages
+  const bw = s*0.12, bh = s*0.16;
+  // Left page
+  ctx.fillStyle = '#C9A84C';
+  ctx.beginPath();
+  ctx.roundRect(cx - bw - s*0.01, cy - bh/2, bw, bh, s*0.01);
+  ctx.fill();
+  // Right page
+  ctx.fillStyle = '#E8C96A';
+  ctx.beginPath();
+  ctx.roundRect(cx + s*0.01, cy - bh/2, bw, bh, s*0.01);
+  ctx.fill();
+  // Spine
+  ctx.fillStyle = '#FFF8E1';
+  ctx.fillRect(cx - s*0.015, cy - bh/2 - s*0.01, s*0.03, bh + s*0.02);
+
+  // Lines on pages
+  ctx.strokeStyle = '#0D3B2E';
+  ctx.lineWidth = s*0.008;
+  ctx.lineCap = 'round';
+  for(let i=1;i<=3;i++){
+    const ly = cy - bh/2 + bh*(i/4);
+    ctx.beginPath(); ctx.moveTo(cx-bw+s*0.01, ly); ctx.lineTo(cx-s*0.02, ly); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+s*0.02, ly); ctx.lineTo(cx+bw-s*0.01, ly); ctx.stroke();
+  }
+
+  // Text
+  ctx.fillStyle = '#C9A84C';
+  ctx.font = `900 ${s*0.14}px Cairo, Arial`;
+  ctx.textAlign = 'center';
+  ctx.fillText('بيجي', cx, cy + cr + s*0.12);
+}
+
+window.onload = () => {
+  const c192 = document.getElementById('c192');
+  const c512 = document.getElementById('c512');
+  drawIcon(c192);
+  drawIcon(c512);
+
+  // Download both
+  function download(canvas, name) {
+    const a = document.createElement('a');
+    a.download = name;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  }
+  setTimeout(() => download(c192, 'icon-192.png'), 500);
+  setTimeout(() => download(c512, 'icon-512.png'), 1200);
+};
+</script>
+</body>
+</html>
