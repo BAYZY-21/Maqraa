@@ -1,33 +1,32 @@
-// ══════════════════════════════════════
-// مقرأة بيجي - Service Worker
-// ══════════════════════════════════════
-const CACHE_NAME = 'beeji-v3';
-const BASE = '/Ha/';
+// ═══════════════════════════════════════
+// Service Worker — مقرأة بيجي
+// Version: 6
+// ═══════════════════════════════════════
 
-const ASSETS = [
-  BASE,
-  BASE + 'index.html',
-  BASE + 'manifest.json',
-  BASE + 'icon-192.png',
-  BASE + 'icon-512.png',
-  'https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=Cairo:wght@300;400;700;900&display=swap',
-  'https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js',
-  'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js'
+const CACHE_NAME   = 'beeji-v4';
+const OFFLINE_PAGE = '/Ha/index.html';
+
+const STATIC_ASSETS = [
+  '/Ha/index.html',
+  '/Ha/manifest.json',
+  '/Ha/icon-192.png',
+  '/Ha/icon-512.png',
+  '/Ha/icon-96.png',
+  '/Ha/icon-48.png',
+  '/Ha/favicon.ico'
 ];
 
-// ── INSTALL ──
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(ASSETS.slice(0, 5))) // فقط الملفات المحلية
-      .catch(() => {})
+// ═══ Install ═══
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
   );
   self.skipWaiting();
 });
 
-// ── ACTIVATE ──
-self.addEventListener('activate', e => {
-  e.waitUntil(
+// ═══ Activate ═══
+self.addEventListener('activate', event => {
+  event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
     )
@@ -35,32 +34,62 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// ── FETCH ──
-self.addEventListener('fetch', e => {
-  // تجاهل Firebase وطلبات غير HTTP
-  const url = e.request.url;
-  if (!url.startsWith('http') || url.includes('firestore') || url.includes('firebase')) {
+// ═══ Fetch ═══
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+  // Firebase & Google APIs — شبكة أولاً
+  if (event.request.url.includes('firebase') ||
+      event.request.url.includes('googleapis') ||
+      event.request.url.includes('firestore') ||
+      event.request.url.includes('gstatic')) {
     return;
   }
+  event.respondWith(
+    fetch(event.request)
+      .then(res => {
+        const clone = res.clone();
+        caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
+        return res;
+      })
+      .catch(() => caches.match(event.request).then(r => r || caches.match(OFFLINE_PAGE)))
+  );
+});
 
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request)
-        .then(resp => {
-          // حفظ نسخة في الكاش للاستخدام offline
-          if (resp && resp.status === 200 && resp.type !== 'opaque') {
-            const clone = resp.clone();
-            caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
-          }
-          return resp;
-        })
-        .catch(() => {
-          // offline fallback
-          if (e.request.destination === 'document') {
-            return caches.match(BASE + 'index.html');
-          }
-        });
+// ═══ Push Notification Click ═══
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  if (event.action === 'dismiss') return;
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const client of list) {
+        if (client.url.includes('/Ha/') && 'focus' in client) return client.focus();
+      }
+      return clients.openWindow(OFFLINE_PAGE);
     })
   );
+});
+
+// ═══ Push Event ═══
+self.addEventListener('push', event => {
+  if (!event.data) return;
+  const data = event.data.json();
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'مقرأة بيجي', {
+      body:    data.body  || '',
+      icon:    '/Ha/icon-192.png',
+      badge:   '/Ha/icon-96.png',
+      vibrate: [200, 100, 200],
+      dir:     'rtl',
+      lang:    'ar',
+      actions: [
+        { action: 'open',    title: '📖 فتح التطبيق' },
+        { action: 'dismiss', title: '✕ إغلاق' }
+      ]
+    })
+  );
+});
+
+// ═══ تحديث تلقائي ═══
+self.addEventListener('message', event => {
+  if (event.data === 'skipWaiting') self.skipWaiting();
 });
