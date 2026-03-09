@@ -1,9 +1,9 @@
 // ═══════════════════════════════════════
 // Service Worker — مقرأة بيجي
-// Version: 7
+// Version: 8
 // ═══════════════════════════════════════
 
-const CACHE_NAME   = 'beeji-v7';
+const CACHE_NAME   = 'beeji-v8';
 const OFFLINE_PAGE = '/Ha/index.html';
 
 const STATIC_ASSETS = [
