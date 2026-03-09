@@ -3,7 +3,7 @@
 // Version: 8
 // ═══════════════════════════════════════
 
-const CACHE_NAME   = 'beeji-v8';
+const CACHE_NAME   = 'beeji-v9';
 const OFFLINE_PAGE = '/Ha/index.html';
 
 const STATIC_ASSETS = [
