@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ه<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -2487,7 +2487,7 @@ function buildAdminMessages() {
     const key = getConvKey('admin',currentUser.id,'teacher',t.id);
     const msgs = getMessages(key);
     const last = msgs[msgs.length-1];
-    const unread = msgs.filter(m=>m.from==='teacher'&&m.fromId===t.id).length;
+ن    const unread = msgs.filter(m=>m.from==='teacher'&&m.fromId===t.id).length;
     return `<div class="conv-list-item" onclick="openChat('teacher',${t.id},'${t.name}','${t.emoji}')">
       <div class="conv-avatar">${t.emoji}</div>
       <div class="conv-info">
